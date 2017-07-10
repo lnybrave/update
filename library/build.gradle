@@ -1,0 +1,55 @@
+apply plugin: 'com.android.library'
+
+android {
+    resourcePrefix "au_"
+
+    compileSdkVersion 25
+    buildToolsVersion "25.0.3"
+
+    defaultConfig {
+        minSdkVersion 15
+        targetSdkVersion 25
+        versionCode 100
+        versionName "1.0.0"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    testCompile 'junit:junit:4.12'
+    compile 'com.android.support:appcompat-v7:25.3.1'
+}
+
+ext {
+    package_repo        = 'maven'           // bintray上的仓库名，一般为maven
+    package_type        = 'aar'             // 输出类型
+    package_group       = 'com.lnybrave'    // JCenter的GroupId
+    package_artifact    = 'update'          // JCenter的ArtifactId
+    package_version     = '1.0.0'           // JCenter的VersionId
+    package_description = 'an android library to update app'
+
+    // 以下选填
+    siteUrl = 'https://github.com/lnybrave/update.git'
+    gitUrl  = 'git@github.com:lnybrave/update.git'
+
+    // 开发者信息
+    developerId     = 'liunianyon'
+    developerName   = 'danyon'
+    developerEmail  = 'liunianyon@gmail.com'
+
+    // 开源协议
+    licenseName = 'The Apache Software License, Version 2.0'
+    licenseUrl  = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+    allLicenses = ["Apache-2.0"]
+}
+
+apply from: 'bintray.gradle'
+
+// gradlew.bat bintrayupload
