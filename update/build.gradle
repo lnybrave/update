@@ -9,8 +9,8 @@ android {
     defaultConfig {
         minSdkVersion 15
         targetSdkVersion 25
-        versionCode 100
-        versionName "1.0.0"
+        versionCode 107
+        versionName "1.0.7"
     }
 
     buildTypes {
@@ -28,11 +28,17 @@ dependencies {
 }
 
 ext {
-    package_repo        = 'maven'           // bintray上的仓库名，一般为maven
-    package_type        = 'aar'             // 输出类型
-    package_group       = 'com.lnybrave'    // JCenter的GroupId
-    package_artifact    = 'update'          // JCenter的ArtifactId
-    package_version     = '1.0.0'           // JCenter的VersionId
+    // bintray上的仓库名，一般为maven
+    package_repo = 'maven'
+    // 输出类型
+    package_type = 'aar'
+    // JCenter的GroupId
+    package_group = 'com.lnybrave'
+    // JCenter的ArtifactId
+    package_artifact = 'update'
+    // JCenter的VersionId
+    package_version = '1.0.7'
+    // 描述(选填）
     package_description = 'an android library to update app'
 
     // 以下选填
@@ -52,4 +58,5 @@ ext {
 
 apply from: 'bintray.gradle'
 
+// gradlew.bat install
 // gradlew.bat bintrayupload
