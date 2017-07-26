@@ -9,8 +9,8 @@ android {
     defaultConfig {
         minSdkVersion 15
         targetSdkVersion 25
-        versionCode 107
-        versionName "1.0.7"
+        versionCode 108
+        versionName "1.0.8"
     }
 
     buildTypes {
@@ -37,7 +37,7 @@ ext {
     // JCenter的ArtifactId
     package_artifact = 'update'
     // JCenter的VersionId
-    package_version = '1.0.7'
+    package_version = '1.0.8'
     // 描述(选填）
     package_description = 'an android library to update app'
 
