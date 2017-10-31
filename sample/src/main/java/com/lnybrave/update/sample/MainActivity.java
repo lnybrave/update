@@ -15,7 +15,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void updateApp(View v) {
-        String url = "http://dayu.whhuiyu.com:80/media/files/dayu-v101-201703011446-sign.apk";
+        String url = "http://answer.sskh.net/download/apk/kangyisheng.apk";
         Updater.with(this)
                 .url(url)
                 .title("大禹电气")

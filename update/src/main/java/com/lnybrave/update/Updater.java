@@ -46,7 +46,7 @@ public class Updater {
 
     public static Builder with(Context context) {
         if (context == null) {
-            throw new NullPointerException("mContext is null");
+            throw new IllegalArgumentException("mContext is null");
         }
         return new Builder(context.getApplicationContext());
     }
