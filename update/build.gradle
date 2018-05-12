@@ -3,14 +3,13 @@ apply plugin: 'com.android.library'
 android {
     resourcePrefix "au_"
 
-    compileSdkVersion 25
-    buildToolsVersion "25.0.3"
+    compileSdkVersion 26
 
     defaultConfig {
         minSdkVersion 15
-        targetSdkVersion 25
-        versionCode 108
-        versionName "1.0.8"
+        targetSdkVersion 26
+        versionCode 109
+        versionName "1.0.9"
     }
 
     buildTypes {
@@ -22,9 +21,9 @@ android {
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-    testCompile 'junit:junit:4.12'
-    compile 'com.android.support:appcompat-v7:25.3.1'
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    testImplementation 'junit:junit:4.12'
+    implementation 'com.android.support:appcompat-v7:26.1.0'
 }
 
 ext {
@@ -37,22 +36,22 @@ ext {
     // JCenter的ArtifactId
     package_artifact = 'update'
     // JCenter的VersionId
-    package_version = '1.0.8'
+    package_version = '1.0.9'
     // 描述(选填）
     package_description = 'an android library to update app'
 
     // 以下选填
     siteUrl = 'https://github.com/lnybrave/update.git'
-    gitUrl  = 'git@github.com:lnybrave/update.git'
+    gitUrl = 'git@github.com:lnybrave/update.git'
 
     // 开发者信息
-    developerId     = 'liunianyon'
-    developerName   = 'danyon'
-    developerEmail  = 'liunianyon@gmail.com'
+    developerId = 'liunianyon'
+    developerName = 'danyon'
+    developerEmail = 'liunianyon@gmail.com'
 
     // 开源协议
     licenseName = 'The Apache Software License, Version 2.0'
-    licenseUrl  = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+    licenseUrl = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
     allLicenses = ["Apache-2.0"]
 }
 

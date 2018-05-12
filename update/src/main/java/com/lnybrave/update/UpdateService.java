@@ -17,31 +17,17 @@ import java.io.File;
 
 import static android.os.Environment.DIRECTORY_DOWNLOADS;
 
-public class UpdateService extends Service implements Cache {
+public class UpdateService extends Service {
 
     private static final String TAG = UpdateService.class.getSimpleName();
 
     public static final String PARAM_UPDATE_URL = "update_url";
     public static final String PARAM_UPDATE_CONFIG = "update_config";
 
-    private CompleteReceiver receiver;
     private long downloadId;
-    private String url;
-    private Updater.Config mConfig;
-
+    private DownloadManager manager;
+    private CompleteReceiver receiver;
     private Cache cache = null;
-
-    @Override
-    public void setDownloadId(String url, long id) {
-        ensureCache(this);
-        cache.setDownloadId(url, id);
-    }
-
-    @Override
-    public long getDownloadId(String url) {
-        ensureCache(this);
-        return cache.getDownloadId(url);
-    }
 
     private void ensureCache(Context context) {
         if (cache == null) {
@@ -57,53 +43,46 @@ public class UpdateService extends Service implements Cache {
     @Override
     public void onCreate() {
         super.onCreate();
-
         receiver = new CompleteReceiver();
         registerReceiver(receiver, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
+
+        manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+        if (manager == null) {
+            stopSelf();
+        }
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        url = intent.getStringExtra(PARAM_UPDATE_URL);
-        mConfig = (Updater.Config) intent.getSerializableExtra(PARAM_UPDATE_CONFIG);
+        String url = intent.getStringExtra(PARAM_UPDATE_URL);
+        UpdateConfig config = (UpdateConfig) intent.getSerializableExtra(PARAM_UPDATE_CONFIG);
 
-        downloadId = getDownloadId(url);
-        if (isDownloaded(downloadId)) {
-            installApp(downloadId);
+        long id = getDownloadIdByUrl(url);
+        if (id > 0 && isDownloadCompleted(id)) {
+            installApp(id);
         } else {
-            if (downloadId <= 0 || isReDownload(downloadId)) {
-                downloadId = download();
-                setDownloadId(url, downloadId);
-            }
+            id = download(url, config);
+
+            ensureCache(this);
+            cache.setDownloadId(url, id);
+            downloadId = id;
         }
 
         return Service.START_NOT_STICKY;
     }
 
-    private boolean isDownloaded(long id) {
-        if (id > 0) {
-            DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
-            DownloadManager.Query query = new DownloadManager.Query();
-            query.setFilterById(id);
-            Cursor cursor = manager.query(query);
-
-            if (cursor != null && cursor.moveToFirst()) {
-                int columnIndex = cursor.getColumnIndex(DownloadManager.COLUMN_STATUS);
-                int status = cursor.getInt(columnIndex);
-                return status == DownloadManager.STATUS_SUCCESSFUL;
-            }
-        }
-        return false;
+    private long getDownloadIdByUrl(String url) {
+        ensureCache(this);
+        long id = cache.getDownloadId(url);
+        return id > 0 && isRedownload(id) ? 0 : id;
     }
 
-    private boolean isReDownload(long id) {
+    private boolean isRedownload(long id) {
         boolean ret = true;
 
-        DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
         DownloadManager.Query query = new DownloadManager.Query();
         query.setFilterById(id);
         Cursor cursor = manager.query(query);
-
         if (cursor != null && cursor.moveToFirst()) {
             int columnIndex = cursor.getColumnIndex(DownloadManager.COLUMN_STATUS);
             int status = cursor.getInt(columnIndex);
@@ -134,11 +113,24 @@ public class UpdateService extends Service implements Cache {
         return ret;
     }
 
-    private long download() {
-        DownloadManager manager = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
+    private boolean isDownloadCompleted(long id) {
+        if (id > 0) {
+            DownloadManager.Query query = new DownloadManager.Query();
+            query.setFilterById(id);
+            Cursor cursor = manager.query(query);
+            if (cursor != null && cursor.moveToFirst()) {
+                int columnIndex = cursor.getColumnIndex(DownloadManager.COLUMN_STATUS);
+                int status = cursor.getInt(columnIndex);
+                return status == DownloadManager.STATUS_SUCCESSFUL;
+            }
+        }
+        return false;
+    }
+
+    private long download(String url, UpdateConfig config) {
         DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
 
-        if (mConfig.mOnlyWifi) {
+        if (config.mOnlyWifi) {
             request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI);
         } else {
             request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_MOBILE | DownloadManager.Request.NETWORK_WIFI);
@@ -151,10 +143,10 @@ public class UpdateService extends Service implements Cache {
         String mimeString = mimeTypeMap.getMimeTypeFromExtension(MimeTypeMap.getFileExtensionFromUrl(url));
         request.setMimeType(mimeString);
 
-        request.setNotificationVisibility(mConfig.mShowNotify ? DownloadManager.Request.VISIBILITY_VISIBLE : DownloadManager.Request.VISIBILITY_HIDDEN);
+        request.setNotificationVisibility(config.mShowNotify ? DownloadManager.Request.VISIBILITY_VISIBLE : DownloadManager.Request.VISIBILITY_HIDDEN);
         request.setVisibleInDownloadsUi(true);
-        request.setDestinationInExternalPublicDir(DIRECTORY_DOWNLOADS, mConfig.mFileName);
-        request.setTitle(mConfig.mTitle);
+        request.setDestinationInExternalPublicDir(DIRECTORY_DOWNLOADS, config.mFileName);
+        request.setTitle(config.mTitle);
         return manager.enqueue(request);
     }
 
@@ -169,7 +161,7 @@ public class UpdateService extends Service implements Cache {
     class CompleteReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (intent.getAction().equals(DownloadManager.ACTION_DOWNLOAD_COMPLETE)) {
+            if (DownloadManager.ACTION_DOWNLOAD_COMPLETE.equals(intent.getAction())) {
                 long downId = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
                 if (downloadId == downId) {
                     installApp(downId);
@@ -180,9 +172,9 @@ public class UpdateService extends Service implements Cache {
 
     private void installApp(long downId) {
         Context context = getApplicationContext();
-        File apkFile = Utils.queryDownloadedApk(context, downId);
+        File apkFile = UpdateUtils.queryDownloadedApk(context, downId);
         if (apkFile != null) {
-            Utils.installApp(context, apkFile);
+            UpdateUtils.installApp(context, apkFile);
         } else {
             Toast.makeText(context, "安装失败", Toast.LENGTH_SHORT).show();
         }

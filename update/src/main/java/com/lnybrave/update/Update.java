@@ -12,7 +12,7 @@ import java.util.ArrayList;
  * Created by lny on 2017/3/17.
  * 版本升级
  */
-public class Updater {
+public class Update {
 
     public static final int SUCCESS = 0;
     public static final int ERROR_INVALID_URL = -1;
@@ -20,7 +20,7 @@ public class Updater {
     public static final int ERROR_DOWNLOADING = -3;
     public static final int ERROR_NO_WIFI = -4;
 
-    public int update(Context context, String url, Config config) {
+    public int update(Context context, String url, UpdateConfig config) {
         if (!isRunning(context, "com.xliu11.update.UpdateService")) {
             Intent intent = new Intent();
             intent.putExtra(UpdateService.PARAM_UPDATE_URL, url);
@@ -34,7 +34,7 @@ public class Updater {
     }
 
     private boolean isRunning(Context context, String className) {
-        ActivityManager am = (ActivityManager) context.getApplicationContext().getSystemService(Context.ACTIVITY_SERVICE);
+        ActivityManager am = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
         ArrayList<ActivityManager.RunningServiceInfo> rs = (ArrayList<ActivityManager.RunningServiceInfo>) am.getRunningServices(30);
         for (int i = 0; i < rs.size(); i++) {
             if (rs.get(i).service.getClassName().equals(className)) {
@@ -46,7 +46,7 @@ public class Updater {
 
     public static Builder with(Context context) {
         if (context == null) {
-            throw new IllegalArgumentException("mContext is null");
+            throw new NullPointerException("context must be not null");
         }
         return new Builder(context.getApplicationContext());
     }
@@ -55,11 +55,12 @@ public class Updater {
 
         private Context mContext;
         private String mUrl;
-        private Config mConfig;
+        private UpdateConfig mConfig;
+        private Callback mCallback;
 
         Builder(Context context) {
             this.mContext = context;
-            this.mConfig = new Config();
+            this.mConfig = new UpdateConfig();
         }
 
         public Builder url(String url) {
@@ -92,36 +93,38 @@ public class Updater {
             return this;
         }
 
-        public void update() {
-            update(null);
+        public Builder callback(Callback callback){
+            mCallback = callback;
+            return this;
         }
 
-        public void update(Callback callback) {
-            if (callback == null) {
-                callback = new SampleCallback();
+        public void update() {
+            if (mCallback == null) {
+                mCallback = new SampleCallback();
             }
+            Callback callback = mCallback;
 
-            if (!Utils.hasPermission(mContext)) {
+            if (!UpdateUtils.hasPermission(mContext)) {
                 callback.onFailure(ERROR_PERMISSION_DENIED);
                 return;
             }
 
-            if (!(mConfig.mOnlyWifi && Utils.isConnectedWifi(mContext))) {
+            if (mConfig.mOnlyWifi && !UpdateUtils.isConnectedWifi(mContext)) {
                 callback.onFailure(ERROR_NO_WIFI);
                 return;
             }
 
-            if (!Utils.isValidUrl(mUrl)) {
+            if (!UpdateUtils.isValidUrl(mUrl)) {
                 callback.onFailure(ERROR_INVALID_URL);
                 return;
             }
 
             if (TextUtils.isEmpty(mConfig.mFileName)) {
-                mConfig.mFileName = Utils.getFileNameByUrl(mUrl);
+                mConfig.mFileName = UpdateUtils.getFileNameByUrl(mUrl);
             }
 
-            Updater updater = new Updater();
-            int ret = updater.update(mContext, mUrl, mConfig);
+            Update update = new Update();
+            int ret = update.update(mContext, mUrl, mConfig);
             if (ret != SUCCESS) {
                 callback.onFailure(ret);
             } else {
@@ -130,13 +133,11 @@ public class Updater {
         }
     }
 
-    static class Config implements Serializable {
-        String mTitle;
-        String mFileName;
-        int mSmallIcon;
-        boolean mShowNotify = true;
-        boolean mAutoInstall = true;
-        boolean mOnlyWifi = false;
+    public interface Callback {
+
+        void onSuccess();
+
+        void onFailure(int error);
     }
 
     private static class SampleCallback implements Callback {
@@ -150,12 +151,4 @@ public class Updater {
 
         }
     }
-
-    public interface Callback {
-
-        void onSuccess();
-
-        void onFailure(int error);
-    }
-
 }

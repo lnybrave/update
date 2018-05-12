@@ -21,7 +21,7 @@ import java.io.File;
 /**
  * Created by lny on 2017/3/17.
  */
-class Utils {
+class UpdateUtils {
 
     static boolean hasPermission(Context context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {

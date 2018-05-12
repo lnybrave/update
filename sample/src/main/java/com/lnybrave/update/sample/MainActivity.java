@@ -2,9 +2,10 @@ package com.lnybrave.update.sample;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 
-import com.lnybrave.update.Updater;
+import com.lnybrave.update.Update;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -16,14 +17,14 @@ public class MainActivity extends AppCompatActivity {
 
     public void updateApp(View v) {
         String url = "http://answer.sskh.net/download/apk/kangyisheng.apk";
-        Updater.with(this)
+        Update.with(this)
                 .url(url)
                 .title("大禹电气")
                 .smallIcon(R.drawable.updater_default_icon)
                 .notification()
                 .autoInstall()
                 .wifi()
-                .update(new Updater.Callback() {
+                .callback(new Update.Callback() {
                     @Override
                     public void onSuccess() {
 
@@ -31,8 +32,9 @@ public class MainActivity extends AppCompatActivity {
 
                     @Override
                     public void onFailure(int error) {
-
+                        Log.d("update", error + "");
                     }
-                });
+                })
+                .update();
     }
 }

@@ -1,2 +1,2 @@
-# updater
+# update
 版本更新
