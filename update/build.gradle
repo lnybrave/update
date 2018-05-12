@@ -1,23 +1,16 @@
 apply plugin: 'com.android.library'
 
 android {
-    resourcePrefix "au_"
-
     compileSdkVersion 26
 
     defaultConfig {
         minSdkVersion 15
         targetSdkVersion 26
         versionCode 109
-        versionName "1.0.9"
+        versionName "1.1.0"
     }
 
-    buildTypes {
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-        }
-    }
+    resourcePrefix "au_"
 }
 
 dependencies {
@@ -26,36 +19,7 @@ dependencies {
     implementation 'com.android.support:appcompat-v7:26.1.0'
 }
 
-ext {
-    // bintray上的仓库名，一般为maven
-    package_repo = 'maven'
-    // 输出类型
-    package_type = 'aar'
-    // JCenter的GroupId
-    package_group = 'com.lnybrave'
-    // JCenter的ArtifactId
-    package_artifact = 'update'
-    // JCenter的VersionId
-    package_version = '1.0.9'
-    // 描述(选填）
-    package_description = 'an android library to update app'
-
-    // 以下选填
-    siteUrl = 'https://github.com/lnybrave/update.git'
-    gitUrl = 'git@github.com:lnybrave/update.git'
-
-    // 开发者信息
-    developerId = 'liunianyon'
-    developerName = 'danyon'
-    developerEmail = 'liunianyon@gmail.com'
-
-    // 开源协议
-    licenseName = 'The Apache Software License, Version 2.0'
-    licenseUrl = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-    allLicenses = ["Apache-2.0"]
-}
-
-apply from: 'bintray.gradle'
-
-// gradlew.bat install
+//apply from: 'bintray.gradle'
+//apply from: 'https://raw.githubusercontent.com/yanzhenjie/bintray/master/bintray.gradle?raw=true'
+apply from: 'https://raw.githubusercontent.com/yanzhenjie/bintray/master/maven.gradle'
 // gradlew.bat bintrayupload
